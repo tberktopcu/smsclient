@@ -26,14 +26,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://*:{port}");
+
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseCors();
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
