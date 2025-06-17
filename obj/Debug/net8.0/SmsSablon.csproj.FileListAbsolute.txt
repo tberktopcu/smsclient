@@ -170,3 +170,6 @@ C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\obj\D
 C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\obj\Debug\net8.0\ref\SmsSablon.dll
 C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\bin\Debug\net8.0\sms-frontend\package-lock.json
 C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\bin\Debug\net8.0\sms-frontend\package.json
+C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\bin\Debug\net8.0\Npgsql.dll
+C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\tahir\OneDrive\Desktop\Visual Studio Projects\SmsSablon\SmsSablon\obj\Debug\net8.0\SmsSablon.sourcelink.json
