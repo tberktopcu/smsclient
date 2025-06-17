@@ -69,10 +69,17 @@ namespace SmsSablon.Controllers
             return NoContent();
         }
 
-        // DELETE: api/SmsHeader/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            // Bu başlık bir SMS şablonunda kullanılıyor mu kontrolü
+            bool isUsed = await _context.Infos.AnyAsync(i => i.SmsHeaderId == id);
+
+            if (isUsed)
+            {
+                return BadRequest("Bu başlık en az bir SMS şablonunda kullanılıyor ve silinemez.");
+            }
+
             var header = await _context.SmsHeaders.FindAsync(id);
             if (header == null)
                 return NotFound();

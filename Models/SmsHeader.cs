@@ -11,6 +11,6 @@ namespace SmsSablon.Models
         public string Header { get; set; }
 
         // Navigation property: Bir Header'ın birçok Info'su olabilir
-        public List<Info> Infos { get; set; }
+        public List<Info>? Infos { get; set; }
     }
 }

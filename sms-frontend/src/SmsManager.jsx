@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 
-const API_BASE_URL = "http://localhost:5252/api";
+const API_BASE_URL = "https://smsbackend-t1kx.onrender.com/api";
 
 export default function SmsManager() {
     const [infos, setInfos] = useState([]);
@@ -13,22 +13,107 @@ export default function SmsManager() {
     const [templateName, setTemplateName] = useState("");
     const [smsText, setSmsText] = useState("");
 
+    const [showHeaderModal, setShowHeaderModal] = useState(false);
+    const [newHeader, setNewHeader] = useState("");
+    const [editingHeader, setEditingHeader] = useState(null);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    function spinnerDotStyle(delay) {
+        return {
+            width: 16,
+            height: 16,
+            borderRadius: "50%",
+            backgroundColor: "#fff",
+            animation: `bounce 1.4s infinite ease-in-out`,
+            animationDelay: `${delay * 0.2}s`
+        };
+    }
+
+
+    function openHeaderModal() {
+        setShowHeaderModal(true);
+        setNewHeader("");
+        setEditingHeader(null);
+    }
+
+    function closeHeaderModal() {
+        setShowHeaderModal(false);
+    }
+
+    async function handleHeaderSave(e) {
+        e.preventDefault();
+        if (!newHeader.trim()) return alert("Başlık boş olamaz");
+        setIsLoading(true);
+        const payload = { header: newHeader };
+        const url = `${API_BASE_URL}/SmsHeader${editingHeader ? `/${editingHeader.id}` : ""}`;
+        const method = editingHeader ? "PUT" : "POST";
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editingHeader ? { ...payload, id: editingHeader.id } : payload),
+        });
+        if (res.ok) {
+            await fetchHeaders();
+            setIsLoading(false);
+            closeHeaderModal();
+            
+        } else alert("Başlık kaydedilemedi.");
+    }
+
+    async function handleHeaderDelete(id) {
+        if (!window.confirm("Bu başlığı silmek istediğinize emin misiniz?")) return;
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/SmsHeader/${id}`, { method: "DELETE" });
+
+            if (res.ok) {
+                fetchHeaders();
+            } else if (res.status === 400) {
+                const errorMessage = await res.text();
+                alert(errorMessage || "Bu başlık başka bir yerde kullanıldığı için silinemez.");
+            } else {
+                alert("Silinemedi. Sunucudan beklenmeyen bir hata döndü.");
+            }
+        } catch (error) {
+            console.error("Silme işlemi hatası:", error);
+            alert("Bir hata oluştu.");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+
     useEffect(() => {
         fetchHeaders();
         fetchInfos();
     }, []);
 
     async function fetchHeaders() {
-        const res = await fetch(`${API_BASE_URL}/SmsHeader`);
-        const data = await res.json();
-        setHeaders(data);
+        
+        try {
+            const res = await fetch(`${API_BASE_URL}/SmsHeader`);
+            const data = await res.json();
+            setHeaders(data);
+        } catch (error) {
+            console.error("Header verileri alınamadı:", error);
+        }
     }
 
     async function fetchInfos() {
-        const res = await fetch(`${API_BASE_URL}/Info`);
-        const data = await res.json();
-        setInfos(data);
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/Info`);
+            const data = await res.json();
+            setInfos(data);
+        } catch (error) {
+            console.error("Info verileri alınırken hata oluştu:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }
+
+
 
     function openModal(info = null) {
         if (info) {
@@ -58,7 +143,7 @@ export default function SmsManager() {
             alert("Lütfen zorunlu alanları doldurun.");
             return;
         }
-
+        setIsLoading(true);
         const payload = {
             smsHeaderId: Number(smsHeaderId),
             isLocked,
@@ -74,8 +159,10 @@ export default function SmsManager() {
             });
             if (res.ok) {
                 fetchInfos();
+                setIsLoading(false);
                 closeModal();
             } else {
+                setIsLoading(false);
                 alert("Güncelleme başarısız.");
             }
         } else {
@@ -86,28 +173,51 @@ export default function SmsManager() {
             });
             if (res.ok) {
                 fetchInfos();
+                setIsLoading(false);
                 closeModal();
             } else {
+                setIsLoading(false);
                 alert("Ekleme başarısız.");
             }
         }
+
     }
 
     async function handleDelete(id) {
-        if (window.confirm("Silmek istediğinize emin misiniz?")) {
-            const res = await fetch(`${API_BASE_URL}/Info/${id}`, {
-                method: "DELETE",
-            });
-            if (res.ok) {
-                fetchInfos();
-            } else {
-                alert("Silme başarısız.");
-            }
+        if (!window.confirm("Silmek istediğinize emin misiniz?")) return;
+        setIsLoading(true);
+        const res = await fetch(`${API_BASE_URL}/Info/${id}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            fetchInfos();
+            setIsLoading(false);
+        } else {
+            setIsLoading(false);    
+            alert("Silme başarısız.");
+
         }
     }
 
+
     return (
+        <>
+            {/* Animasyon tanımı */}
+            <style>
+                {`
+          @keyframes bounce {
+            0%, 80%, 100% {
+              transform: scale(0);
+            }
+            40% {
+              transform: scale(1.0);
+            }
+          }
+        `}
+            </style>
+
         <div
+
             style={{
                 minHeight: "100vh",
                 width: "100vw",
@@ -119,6 +229,7 @@ export default function SmsManager() {
             }}
         >
             <h1 style={{ marginBottom: 20 }}>SMS Şablonları</h1>
+
 
             <button
                 onClick={() => openModal()}
@@ -132,11 +243,31 @@ export default function SmsManager() {
                     fontWeight: "bold",
                     fontSize: 16,
                     marginBottom: 20,
+                    marginRight: 20,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0056b3")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#007bff")}
             >
                 + Yeni Ekle
+            </button>
+
+            <button
+                onClick={openHeaderModal}
+                style={{
+                    cursor: "pointer",
+                    padding: "10px 18px",
+                    borderRadius: 6,
+                    border: "none",
+                    backgroundColor: "#28a745",
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                    marginBottom: 20,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1e7e34")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#28a745")}
+            >
+                SMS Başlıklarını Yönet
             </button>
 
             <table
@@ -244,6 +375,140 @@ export default function SmsManager() {
                     })}
                 </tbody>
             </table>
+            
+            
+
+            {showHeaderModal && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        width: "100vw",
+                        height: "100vh",
+                        backgroundColor: "rgba(0, 0, 0, 0.3)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        zIndex: 9999,
+                    }}
+                    onClick={closeHeaderModal}
+                >
+                    <div
+                        style={{
+                            backgroundColor: "#ffffff",
+                            padding: 24,
+                            borderRadius: 8,
+                            minWidth: 350,
+                            maxWidth: "90vw",
+                            boxShadow: "0 4px 15px rgba(0,0,0,0.25)",
+                            color: "#000000",
+                            fontWeight: "bold",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 style={{ marginBottom: 16, color: "#000000" }}>
+                            {editingHeader ? "Başlık Düzenle" : "Yeni Başlık Ekle"}
+                        </h2>
+                        <form onSubmit={handleHeaderSave}>
+                            <div style={{ marginBottom: 12 }}>
+                                <label
+                                    htmlFor="headerInput"
+                                    style={{ display: "block", marginBottom: 4, color: "#000000" }}
+                                >
+                                    Başlık:
+                                </label>
+                                <input
+                                    id="headerInput"
+                                    type="text"
+                                    value={newHeader}
+                                    onChange={(e) => setNewHeader(e.target.value)}
+                                    required
+                                    style={{
+                                        width: "95%",
+                                        padding: 8,
+                                        borderRadius: 4,
+                                        border: "1px solid #ccc",
+                                        color: "#000000",
+                                        backgroundColor: "#ffffff",
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <button
+                                    type="submit"
+                                    style={{
+                                        padding: "8px 16px",
+                                        cursor: "pointer",
+                                        backgroundColor: "#007bff",
+                                        color: "#fff",
+                                        border: "none",
+                                        borderRadius: 4,
+                                    }}
+                                >
+                                    {editingHeader ? "Güncelle" : "Ekle"}
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr style={{ margin: "16px 0" }} />
+
+                        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+                            {headers.map(h => (
+                                <li
+                                    key={h.id}
+                                    style={{
+                                        marginBottom: 8,
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        color: "#000000",
+                                    }}
+                                >
+                                    <span>{h.header}</span>
+                                    <div>
+                                        <button
+                                            onClick={() => {
+                                                setNewHeader(h.header);
+                                                setEditingHeader(h);
+                                            }}
+                                            style={{
+                                                padding: "6px 12px",
+                                                borderRadius: 6,
+                                                border: "1.5px solid #007bff",
+                                                backgroundColor: "white",
+                                                color: "#007bff",
+                                                fontWeight: "600",
+                                                cursor: "pointer",
+                                                marginRight: 8,
+                                            }}
+                                        >
+                                            Düzenle
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleHeaderDelete(h.id);
+                                            }}
+                                            style={{
+                                                padding: "6px 12px",
+                                                borderRadius: 6,
+                                                border: "1.5px solid #FF0000",
+                                                backgroundColor: "white",
+                                                color: "#FF0000",
+                                                fontWeight: "600",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            Sil
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
 
             {/* Popup */}
             {showModal && (
@@ -337,7 +602,7 @@ export default function SmsManager() {
                                     value={templateName}
                                     onChange={(e) => setTemplateName(e.target.value)}
                                     style={{
-                                        width: "100%",
+                                        width: "95%",
                                         padding: 8,
                                         borderRadius: 4,
                                         border: "1px solid #ccc",
@@ -361,9 +626,10 @@ export default function SmsManager() {
                                     onChange={(e) => setSmsText(e.target.value)}
                                     required
                                     style={{
-                                        width: "100%",
+                                        width: "95%",
+                                        height: 150,
                                         padding: 8,
-                                        borderRadius: 4,
+                                        borderRadius: 10,
                                         border: "1px solid #ccc",
                                         color: "#000000",
                                         backgroundColor: "#ffffff",
@@ -405,6 +671,34 @@ export default function SmsManager() {
                     </div>
                 </div>
             )}
-        </div>
+
+            {isLoading && (
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    zIndex: 9999
+                }}>
+                    <div style={{
+                        display: "flex",
+                        gap: 10,
+                    }}>
+                        <div style={spinnerDotStyle(0)}></div>
+                        <div style={spinnerDotStyle(1)}></div>
+                        <div style={spinnerDotStyle(2)}></div>
+                    </div>
+                </div>
+            )}
+
+
+            </div>
+
+        </>
     );
 }
