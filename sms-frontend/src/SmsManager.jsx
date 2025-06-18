@@ -1,6 +1,8 @@
 ﻿import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "https://smsbackend-t1kx.onrender.com/api";
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+
 
 export default function SmsManager() {
     const [infos, setInfos] = useState([]);
@@ -18,6 +20,13 @@ export default function SmsManager() {
     const [editingHeader, setEditingHeader] = useState(null);
 
     const [isLoading, setIsLoading] = useState(false);
+    const token = localStorage.getItem("token");
+    const navigate = useNavigate();
+
+    function logout() {
+        localStorage.removeItem("token");
+        navigate("/");
+    }
 
     function spinnerDotStyle(delay) {
         return {
@@ -50,7 +59,10 @@ export default function SmsManager() {
         const method = editingHeader ? "PUT" : "POST";
         const res = await fetch(url, {
             method,
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify(editingHeader ? { ...payload, id: editingHeader.id } : payload),
         });
         if (res.ok) {
@@ -65,7 +77,12 @@ export default function SmsManager() {
         if (!window.confirm("Bu başlığı silmek istediğinize emin misiniz?")) return;
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/SmsHeader/${id}`, { method: "DELETE" });
+            const res = await fetch(`${API_BASE_URL}/SmsHeader/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
 
             if (res.ok) {
                 fetchHeaders();
@@ -92,7 +109,11 @@ export default function SmsManager() {
     async function fetchHeaders() {
         
         try {
-            const res = await fetch(`${API_BASE_URL}/SmsHeader`);
+            const res = await fetch(`${API_BASE_URL}/SmsHeader`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             setHeaders(data);
         } catch (error) {
@@ -103,7 +124,11 @@ export default function SmsManager() {
     async function fetchInfos() {
         setIsLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/Info`);
+            const res = await fetch(`${API_BASE_URL}/Info`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             setInfos(data);
         } catch (error) {
@@ -154,7 +179,10 @@ export default function SmsManager() {
         if (editingInfo) {
             const res = await fetch(`${API_BASE_URL}/Info/${editingInfo.id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ ...payload, id: editingInfo.id }),
             });
             if (res.ok) {
@@ -168,7 +196,10 @@ export default function SmsManager() {
         } else {
             const res = await fetch(`${API_BASE_URL}/Info`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(payload),
             });
             if (res.ok) {
@@ -188,6 +219,9 @@ export default function SmsManager() {
         setIsLoading(true);
         const res = await fetch(`${API_BASE_URL}/Info/${id}`, {
             method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
         });
         if (res.ok) {
             fetchInfos();
@@ -262,6 +296,7 @@ export default function SmsManager() {
                     color: "white",
                     fontWeight: "bold",
                     fontSize: 16,
+                    marginRight: 1374,
                     marginBottom: 20,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1e7e34")}
@@ -269,6 +304,25 @@ export default function SmsManager() {
             >
                 SMS Başlıklarını Yönet
             </button>
+
+                <button
+                    onClick={logout}
+                    style={{
+                        cursor: "pointer",
+                        padding: "10px 18px",
+                        borderRadius: 6,
+                        border: "none",
+                        backgroundColor: "#FF0000",
+                        color: "white",
+                        fontWeight: "bold",
+                        fontSize: 16,
+                        marginBottom: 20,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#dc3545")} // koyu kırmızı
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#FF0000")} // normal kırmızı
+                >
+                    Çıkış Yap
+                </button>
 
             <table
                 style={{
@@ -292,7 +346,7 @@ export default function SmsManager() {
                     {infos.length === 0 && (
                         <tr>
                             <td colSpan={5} style={{ padding: 16, textAlign: "center", color: "#777" }}>
-                                Kayıtlı SMS bulunmamaktadır.
+                                Kayıtlı SMS Şablonu bulunmamaktadır.
                             </td>
                         </tr>
                     )}
