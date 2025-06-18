@@ -12,7 +12,7 @@ export default function Auth() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const res = await fetch(`${baseUrl}/api/auth/login`, {
+    const res = await fetch(`${baseUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -31,7 +31,7 @@ export default function Auth() {
   };
 
   const handleRegister = async () => {
-    const res = await fetch(`${baseUrl}/api/auth/register`, {
+    const res = await fetch(`${baseUrl}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password}),

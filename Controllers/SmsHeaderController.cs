@@ -22,7 +22,10 @@ namespace SmsSablon.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<SmsHeader>>> GetAll()
         {
-            return await _context.SmsHeaders.Include(h => h.Infos).ToListAsync();
+            return await _context.SmsHeaders
+                .Include(h => h.Infos)
+                .OrderBy(h => h.Id)
+                .ToListAsync();
         }
 
         // GET: api/SmsHeader/5
