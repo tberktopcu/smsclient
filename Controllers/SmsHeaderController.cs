@@ -24,7 +24,7 @@ namespace SmsSablon.Controllers
         {
             return await _context.SmsHeaders
                 .Include(h => h.Infos)
-                .OrderBy(h => h.Id)
+                .OrderByDescending(h => h.Id)
                 .ToListAsync();
         }
 

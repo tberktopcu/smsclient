@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmsSablon")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c7c9275d4f054541f971978194150dec48b2dbe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e55c14bf231d05ffcd36044265c5f03d288de198")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmsSablon")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmsSablon")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
